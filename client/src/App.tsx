@@ -7,6 +7,8 @@ import Games from './pages/GamePage';
 import Account from './pages/Account';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import RPS from './pages/RPS';
+
 
 function App() {
   return (
@@ -42,6 +44,14 @@ function App() {
                   <Account />
                 </Layout>
               </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/rps" 
+            element={
+              <Layout>
+                <RPS />
+              </Layout>
             }
           />
           {/* Redirect any unknown paths to dashboard */}
