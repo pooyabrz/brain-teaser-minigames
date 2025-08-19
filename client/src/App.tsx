@@ -8,6 +8,7 @@ import Account from './pages/Account';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import RPS from './pages/RPS';
+import TicTacToe from './pages/TicTacToe';
 
 
 function App() {
@@ -52,6 +53,14 @@ function App() {
               <Layout>
                 <RPS />
               </Layout>
+            }
+          />
+          <Route 
+            path="/tictactoe" 
+            element={
+                <Layout className="flex justify-center">
+                  <TicTacToe />
+                </Layout>
             }
           />
           {/* Redirect any unknown paths to dashboard */}
