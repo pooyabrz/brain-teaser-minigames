@@ -8,6 +8,8 @@ import Account from './pages/Account';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import RPS from './pages/RPS';
+import Sudoku from './pages/Sudoku';
+
 import TicTacToe from './pages/TicTacToe';
 
 
@@ -61,6 +63,14 @@ function App() {
                 <Layout className="flex justify-center">
                   <TicTacToe />
                 </Layout>
+            }
+          />
+          <Route 
+            path="/sudoku" 
+            element={
+              <Layout>
+                <Sudoku />
+              </Layout>
             }
           />
           {/* Redirect any unknown paths to dashboard */}
