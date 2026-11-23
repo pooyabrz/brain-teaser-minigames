@@ -1,52 +1,60 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import AdminLogin from './pages/LoginPage';
-import Dashboard from './pages/DashboardPage';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import EditGame from './components/EditGame';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Activity, ArrowRight, BarChart3, BrainCircuit, Check, ChevronDown, CirclePlus, Gamepad2, LayoutDashboard, LogOut, Pencil, Search, ShieldCheck, Trash2, Users, X } from 'lucide-react';
 
-const AppContent = () => {
-  const { isLoggedIn } = useAuth();
-
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow p-4">
-        <Routes>
-          <Route 
-            path="/" 
-            element={isLoggedIn ? <Navigate to="/dashboard" /> : <AdminLogin />} 
-          />
-          <Route 
-            path="/login" 
-            element={isLoggedIn ? <Navigate to="/dashboard" /> : <AdminLogin />} 
-          />
-          <Route 
-            path="/dashboard" 
-            element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/edit-game/:id" 
-            element={isLoggedIn ? <EditGame /> : <Navigate to="/login" />} 
-          />
-          <Route path="*" element={<Navigate to={isLoggedIn ? "/dashboard" : "/login"} />} />
-        </Routes>
-      </main>
-      <Footer />
-    </div>
-  );
-};
-
-function App() {
-  return (
-    <Router>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </Router>
-  );
+type User = { id: number; name: string; email: string; role: string };
+type Game = { id: number; slug: string; title: string; description: string; category: string; difficulty: string; accent: string; icon: string; isPublished: boolean; plays: number };
+type Member = User & { createdAt: string; plays: number };
+type Overview = { players: number; games: number; sessions: number; recent: { id: number; player: string; game: string; score: number; createdAt: string }[] };
+type Tab = 'overview'|'games'|'users'|'settings';
+type GameForm = Omit<Game, 'id'|'plays'>;
+const blank: GameForm = { slug:'',title:'',description:'',category:'Logic',difficulty:'Medium',accent:'violet',icon:'puzzle',isPublished:false };
+async function api<T>(url: string, method = 'GET', body?: unknown): Promise<T> {
+  const res = await fetch(`/api${url}`, { method, credentials:'include', headers: body === undefined ? undefined : { 'Content-Type':'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || `Request failed (${res.status})`);
+  return data as T;
 }
-
-export default App;
+export default function App() {
+  const [user, setUser] = useState<User|null>(null); const [checking, setChecking] = useState(true);
+  const [email,setEmail] = useState(''); const [password,setPassword] = useState('');
+  const [tab,setTab] = useState<Tab>('overview'); const [loading,setLoading] = useState(false); const [error,setError] = useState(''); const [notice,setNotice] = useState('');
+  const [overview,setOverview] = useState<Overview|null>(null); const [games,setGames] = useState<Game[]>([]); const [members,setMembers] = useState<Member[]>([]);
+  const [search,setSearch] = useState(''); const [editing,setEditing] = useState<Game|null|'new'>(null); const [form,setForm] = useState<GameForm>(blank);
+  const [adminName,setAdminName] = useState(''); const [adminEmail,setAdminEmail] = useState(''); const [adminPassword,setAdminPassword] = useState('');
+  const [oldPassword,setOldPassword] = useState(''); const [newPassword,setNewPassword] = useState('');
+  useEffect(() => { api<{user:User|null}>('/auth/me').then(data => setUser(data.user?.role === 'ADMIN' ? data.user : null)).catch(() => undefined).finally(() => setChecking(false)); }, []);
+  useEffect(() => { if (!user) return; refresh(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+  const refresh = () => {
+    api<Overview>('/admin/overview').then(setOverview).catch(e => setError(e.message));
+    api<Game[]>('/admin/games').then(setGames).catch(e => setError(e.message));
+    api<Member[]>('/admin/users').then(setMembers).catch(e => setError(e.message));
+  };
+  const signIn = async (e:FormEvent) => { e.preventDefault(); setLoading(true); setError(''); try {
+    const result = await api<{user:User}>('/auth/login','POST',{email,password});
+    if (result.user.role !== 'ADMIN') { await api('/auth/logout','POST'); throw new Error('An administrator account is required.'); }
+    setUser(result.user); setPassword('');
+  } catch (ex) { setError((ex as Error).message); } finally { setLoading(false); } };
+  const signOut = async () => { try { await api('/auth/logout','POST'); } finally { setUser(null); setTab('overview'); setOverview(null); } };
+  const toggle = async (game:Game) => { setError(''); try { await api(`/admin/games/${game.id}`,'PATCH',{ ...game, isPublished:!game.isPublished }); refresh(); setNotice(`${game.title} ${game.isPublished ? 'hidden' : 'published'}.`); } catch (ex) { setError((ex as Error).message); } };
+  const openEditor = (game:Game|null) => { setEditing(game || 'new'); setForm(game ? { slug:game.slug,title:game.title,description:game.description,category:game.category,difficulty:game.difficulty,accent:game.accent,icon:game.icon,isPublished:game.isPublished } : { ...blank }); setError(''); };
+  const saveGame = async (e:FormEvent) => { e.preventDefault(); setLoading(true); setError(''); try { await api(editing === 'new' ? '/admin/games' : `/admin/games/${(editing as Game).id}`,editing === 'new' ? 'POST' : 'PATCH',form); setEditing(null); setNotice('Game saved successfully.'); refresh(); } catch(ex) { setError((ex as Error).message); } finally { setLoading(false); } };
+  const deleteGame = async (game:Game) => { if (!window.confirm(`Delete ${game.title}? Its saved scores will also be deleted. This cannot be undone.`)) return; try { await api(`/admin/games/${game.id}`,'DELETE'); refresh(); setNotice('Game deleted.'); } catch(ex) { setError((ex as Error).message); } };
+  const addAdmin = async(e:FormEvent) => { e.preventDefault(); setError(''); try { await api('/admin/users','POST',{name:adminName,email:adminEmail,password:adminPassword}); setAdminName('');setAdminEmail('');setAdminPassword('');setNotice('Administrator created.');refresh(); } catch(ex) { setError((ex as Error).message); } };
+  const changePassword = async(e:FormEvent) => { e.preventDefault(); setError('');try { await api('/account/password','POST',{currentPassword:oldPassword,newPassword});setOldPassword('');setNewPassword('');setNotice('Your password has been changed.'); }catch(ex){setError((ex as Error).message);} };
+  const filtered = useMemo(() => games.filter(g => `${g.title} ${g.slug} ${g.category}`.toLowerCase().includes(search.toLowerCase())),[games,search]);
+  if (checking) return <div className="loading-screen">Loading admin portal…</div>;
+  if (!user) return <main className="login-page"><div className="login-graphic"><div className="login-mark"><BrainCircuit size={40}/></div><span className="overline">BRAINWAVE CONTROL ROOM</span><h1>Make play<br/><em>possible.</em></h1><p>One clean place to manage the games, players, and little moments of brilliance.</p><div className="graphic-lines"><span>✦</span><Gamepad2 size={180} strokeWidth={1}/></div></div><div className="login-form-container"><form className="login-card" onSubmit={signIn}><div className="login-icon"><ShieldCheck size={30}/></div><span className="overline">ADMIN ACCESS</span><h2>Welcome back.</h2><p>Sign in to your management dashboard.</p><label>Email<input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@example.com" required/></label><label>Password<input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" required/></label>{error && <div className="error-box" role="alert">{error}</div>}<button type="submit" className="primary-btn" disabled={loading}>{loading ? 'Signing in…' : 'Open dashboard'} <ArrowRight size={19}/></button><small>The initial administrator is created using the backend seed script.</small></form></div></main>;
+  return <div className="admin-app"><aside className="sidebar"><div className="sidebar-brand"><span><BrainCircuit size={26}/></span><div>brain<b>wave</b><small>ADMIN STUDIO</small></div></div><div className="side-menu-label">WORKSPACE</div><nav>{([['overview',LayoutDashboard,'Overview'],['games',Gamepad2,'Manage games'],['users',Users,'Players & admins'],['settings',ShieldCheck,'Account settings']] as const).map(([value,Icon,label]) => <button key={value} onClick={() => {setTab(value);setError('');setNotice('');}} className={tab === value ? 'active':''}><Icon size={19}/>{label}{value==='games' && <span className="menu-count">{games.length}</span>}</button>)}</nav><div className="sidebar-foot"><div className="admin-identity"><span>{user.name.charAt(0).toUpperCase()}</span><div><strong>{user.name}</strong><small>Administrator</small></div></div><button className="sidebar-logout" onClick={signOut}><LogOut size={18}/> Sign out</button></div></aside>
+    <div className="admin-content"><header className="admin-header"><div className="breadcrumbs">BRAINWAVE <span>/</span> {tab.toUpperCase()}</div><div className="header-right"><span className="status-dot"/> SYSTEM CONNECTED <span className="header-avatar">{user.name.charAt(0).toUpperCase()}</span></div></header>
+    <main className="admin-main"><div className="admin-heading"><div><span className="overline">YOUR MANAGEMENT SPACE</span><h1>{tab === 'overview' ? 'Dashboard overview' : tab === 'games' ? 'Game collection' : tab === 'users' ? 'Community members' : 'Account settings'}<span className="heading-dot">.</span></h1><p>{tab === 'overview' ? 'Everything happening in your little corner of the internet.' : tab === 'games' ? 'Publish, update, and organize your playable experiences.' : tab === 'users' ? 'Keep up with your players and manage administrator access.' : 'A safer space starts with a strong password.'}</p></div>{tab === 'games' && <button className="primary-btn" onClick={() => openEditor(null)}><CirclePlus size={18}/> Add game</button>}</div>
+    {notice && <div className="success-box" role="status"><Check size={17}/>{notice}<button aria-label="Dismiss notification" onClick={() => setNotice('')}><X size={16}/></button></div>}
+    {error && <div className="error-box" role="alert">{error}<button aria-label="Dismiss error" onClick={() => setError('')}><X size={16}/></button></div>}
+    {tab === 'overview' && <><div className="overview-grid"><div className="metric-card"><span className="metric-icon violet"><Users size={22}/></span><small>TOTAL PLAYERS</small><strong>{overview?.players ?? '—'}</strong><span className="metric-caption">Registered community members</span></div><div className="metric-card"><span className="metric-icon mint"><Gamepad2 size={22}/></span><small>GAMES IN LIBRARY</small><strong>{overview?.games ?? '—'}</strong><span className="metric-caption">Experiences to discover</span></div><div className="metric-card"><span className="metric-icon coral"><Activity size={22}/></span><small>GAMES COMPLETED</small><strong>{overview?.sessions ?? '—'}</strong><span className="metric-caption">Saved scoring sessions</span></div></div><section className="data-panel"><div className="data-panel-head"><div><h2><BarChart3 size={20}/> Recent activity</h2><p>Latest game results from your community.</p></div><button className="soft-btn" onClick={refresh}>Refresh</button></div><div className="table-scroll"><table><thead><tr><th>PLAYER</th><th>GAME</th><th>SCORE</th><th>WHEN</th></tr></thead><tbody>{overview?.recent.map(row => <tr key={row.id}><td><span className="player-bubble">{row.player.charAt(0)}</span><b>{row.player}</b></td><td>{row.game}</td><td><strong>{row.score.toLocaleString()} pts</strong></td><td>{new Date(row.createdAt).toLocaleString()}</td></tr>)}{!overview?.recent.length && <tr><td className="no-rows" colSpan={4}>No game activity yet.</td></tr>}</tbody></table></div></section></>}
+    {tab === 'games' && <section className="data-panel"><div className="data-panel-head"><div><h2>All games <span className="panel-count">{games.length}</span></h2><p>Control visibility and edit game details.</p></div><div className="admin-search"><Search size={18}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search games…" aria-label="Search games"/></div></div><div className="table-scroll"><table><thead><tr><th>GAME</th><th>CATEGORY</th><th>PLAYS</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody>{filtered.map(game => <tr key={game.id}><td><div className="table-game"><span className={`table-game-icon ${game.accent}`}><Gamepad2 size={19}/></span><div><b>{game.title}</b><small>/{game.slug}</small></div></div></td><td>{game.category}</td><td>{game.plays}</td><td><button className={`status-pill ${game.isPublished ? 'published' : 'hidden'}`} onClick={() => toggle(game)} title="Toggle publication"><span/>{game.isPublished ? 'Published' : 'Hidden'}<ChevronDown size={14}/></button></td><td><div className="row-actions"><button aria-label={`Edit ${game.title}`} title="Edit game" onClick={() => openEditor(game)}><Pencil size={16}/></button><button aria-label={`Delete ${game.title}`} title="Delete game" className="danger" onClick={() => deleteGame(game)}><Trash2 size={16}/></button></div></td></tr>)}{!filtered.length && <tr><td colSpan={5} className="no-rows">No games match your search.</td></tr>}</tbody></table></div><p className="table-help">Only the five bundled game slugs are playable. Custom entries appear as “Coming soon” until their game component is implemented.</p></section>}
+    {tab === 'users' && <><section className="data-panel"><div className="data-panel-head"><div><h2>Registered accounts <span className="panel-count">{members.length}</span></h2><p>Player and administrator overview.</p></div></div><div className="table-scroll"><table><thead><tr><th>NAME</th><th>EMAIL</th><th>ROLE</th><th>PLAYS</th><th>JOINED</th></tr></thead><tbody>{members.map(member => <tr key={member.id}><td><span className="player-bubble">{member.name.charAt(0)}</span><b>{member.name}</b></td><td>{member.email}</td><td><span className={`role-pill ${member.role === 'ADMIN' ? 'is-admin' : ''}`}>{member.role}</span></td><td>{member.plays}</td><td>{new Date(member.createdAt).toLocaleDateString()}</td></tr>)}</tbody></table></div></section><section className="data-panel form-panel"><div className="data-panel-head"><div><h2><ShieldCheck size={20}/> Create administrator</h2><p>Grant trusted colleagues access to this dashboard.</p></div></div><form className="admin-form" onSubmit={addAdmin}><label>Full name<input value={adminName} onChange={e => setAdminName(e.target.value)} placeholder="Jane Smith" minLength={2} required/></label><label>Email address<input type="email" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} placeholder="jane@example.com" required/></label><label>Temporary password<input type="password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} placeholder="Minimum 10 characters" minLength={10} required/></label><button className="primary-btn" type="submit">Create admin <ArrowRight size={17}/></button></form></section></>}
+    {tab === 'settings' && <section className="data-panel form-panel"><div className="data-panel-head"><div><h2><ShieldCheck size={20}/> Change password</h2><p>Use a unique password with at least ten characters.</p></div></div><form className="admin-form" onSubmit={changePassword}><label>Current password<input type="password" autoComplete="current-password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} required/></label><label>New password<input type="password" autoComplete="new-password" value={newPassword} minLength={10} onChange={e => setNewPassword(e.target.value)} required/></label><button className="primary-btn" type="submit">Update password <ArrowRight size={17}/></button></form></section>}
+    </main></div>
+    {editing && <div className="modal-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) setEditing(null); }}><section className="editor-modal" role="dialog" aria-modal="true" aria-label="Edit game details"><div className="editor-head"><div><span className="overline">GAME DETAILS</span><h2>{editing === 'new' ? 'Add a game' : 'Edit game'}</h2></div><button aria-label="Close editor" onClick={() => setEditing(null)}><X size={23}/></button></div><form onSubmit={saveGame} className="editor-form"><div className="form-two"><label>Title<input value={form.title} onChange={e => setForm({ ...form, title:e.target.value })} maxLength={80} required/></label><label>Slug<input value={form.slug} onChange={e => setForm({ ...form, slug:e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,'') })} placeholder="new-game" minLength={2} maxLength={48} required/></label></div><label>Description<textarea value={form.description} onChange={e => setForm({ ...form, description:e.target.value })} rows={3} maxLength={300} required/></label><div className="form-two"><label>Category<input value={form.category} onChange={e => setForm({ ...form, category:e.target.value })} required/></label><label>Difficulty<select value={form.difficulty} onChange={e => setForm({ ...form, difficulty:e.target.value })}><option>Easy</option><option>Medium</option><option>Challenging</option><option>Hard</option></select></label></div><div className="form-two"><label>Accent color<select value={form.accent} onChange={e => setForm({ ...form, accent:e.target.value })}><option>violet</option><option>mint</option><option>orange</option><option>pink</option><option>blue</option></select></label><label>Icon name<input value={form.icon} onChange={e => setForm({ ...form, icon:e.target.value })} required/></label></div><label className="toggle-label"><input type="checkbox" checked={form.isPublished} onChange={e => setForm({ ...form, isPublished:e.target.checked })}/> Publish game in player library</label>{error && <div className="error-box">{error}</div>}<div className="editor-actions"><button type="button" className="soft-btn" onClick={() => setEditing(null)}>Cancel</button><button type="submit" className="primary-btn" disabled={loading}>{loading ? 'Saving…' : 'Save game'} <Check size={17}/></button></div></form></section></div>}
+  </div>;
+}

@@ -1,84 +1,24 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import Login from './pages/LoginPage';
+import type { ReactNode } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { Layout } from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Games from './pages/GamePage';
+import LoginPage from './pages/LoginPage';
 import Account from './pages/Account';
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
-import RPS from './pages/RPS';
-import Sudoku from './pages/Sudoku';
+import Leaderboard from './pages/Leaderboard';
+import GameRouter from './pages/GameRouter';
 
-import TicTacToe from './pages/TicTacToe';
-
-
-function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Layout><Login /></Layout>} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/games" 
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Games />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/account" 
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Account />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/rps" 
-            element={
-              <Layout>
-                <RPS />
-              </Layout>
-            }
-          />
-          <Route 
-            path="/tictactoe" 
-            element={
-                <Layout className="flex justify-center">
-                  <TicTacToe />
-                </Layout>
-            }
-          />
-          <Route 
-            path="/sudoku" 
-            element={
-              <Layout>
-                <Sudoku />
-              </Layout>
-            }
-          />
-          {/* Redirect any unknown paths to dashboard */}
-          <Route path="*" element={<Navigate to="/dashboard" />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
-  );
+function Protected({ children }: { children: ReactNode }) { const { user, loading } = useAuth(); return loading ? <div className="shell empty-screen">Loading account…</div> : user ? <>{children}</> : <Navigate to="/login" replace/>; }
+export default function App() {
+  return <AuthProvider><BrowserRouter><Routes><Route element={<Layout/>}>
+    <Route index element={<Navigate to="/dashboard" replace/>}/>
+    <Route path="/dashboard" element={<Dashboard/>}/>
+    <Route path="/games" element={<Games/>}/>
+    <Route path="/play/:slug" element={<GameRouter/>}/>
+    <Route path="/leaderboard" element={<Leaderboard/>}/>
+    <Route path="/login" element={<LoginPage/>}/>
+    <Route path="/account" element={<Protected><Account/></Protected>}/>
+    <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
+  </Route></Routes></BrowserRouter></AuthProvider>;
 }
-
-export default App;

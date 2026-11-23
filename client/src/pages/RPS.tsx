@@ -1,115 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { RoundSelector } from '../components/Set_Rounds';
-import { Score } from '../components/Score';
-import { RevealScore } from '../components/Reveal_score';
-import { PlayerTurn } from '../components/Player_choice';
+import { useEffect, useState } from 'react';
+import { Hand, HandMetal, Scissors, Sparkles, Trophy } from 'lucide-react';
+import { GameFrame, GameResult } from '../components/GameFrame';
+import { useScore } from '../lib/useScore';
 
-// import { useAuth } from '../context/AuthContext'; todo
-
-const RPS = () => {
-    // const navigate = useNavigate();
-
-    // // todo: navigate buttons handling
-
-
-    const [rounds,setRounds]= useState(1);
-    const [rounds_played,setRounds_played]= useState(0);
-    const [rounds_selector, setRounds_selector]=useState("flex");
-    const [play_page, setPlay_page]=useState("hidden");
-    const [game_over, setGame_over]=useState("hidden");
-    const [selected_round_number,setSelected_round_number]=useState(0);
-    const [bot_choice, setBot_choice] = useState(-1);
-    const [player_choice, setPlayer_choice] = useState(-1);
-    const [bot_value, setBot_value] = useState(0);
-    const [player_value, setPlayer_value] = useState(0);
-    const [draw_score,setDraw_score]=useState(0);
-    const [player_result,setPlayer_result]=useState<string>("");
-    const [bot_result,setBot_result]=useState<string>("");
-    const [player_result_text,setPlayer_result_text]=useState<string>("not taken yet");
-    const [bot_result_text,setBot_result_text]=useState<string>("not taken yet");
-    
-
-
-    return (
-        <div className="bg-[#F1EFEC] flex justify-center items-center flex-col h-screen">
-            <h1 className="text-2xl text-dark-blue"><b>Rock Paper Scissor</b></h1>
-            <div id="play-page" className={`${play_page} justify-center items-center flex-col h-screen w-full`}>
-                <Score 
-                    bot_choice={bot_choice}
-                    setBot_choice={setBot_choice}
-                    player_choice={player_choice}
-                    setPlayer_choice={setPlayer_choice}
-                    bot_value={bot_value}
-                    setBot_value={setBot_value}
-                    player_value={player_value}
-                    setPlayer_value={setPlayer_value}
-                    rounds_played={rounds_played}
-                    setRounds_played={setRounds_played}
-                    selected_round_number={selected_round_number}
-                    game_over={game_over}
-                    setGame_over={setGame_over}
-                    draw_score={draw_score}
-                    setDraw_score={setDraw_score}
-                />
-                <PlayerTurn 
-                    setPlayer_choice={setPlayer_choice}
-                    setBot_choice={setBot_choice}
-                    player_result={player_result}
-                    setPlayer_result={setPlayer_result} 
-                    bot_result={bot_result}
-                    setBot_result={setBot_result}
-                    player_result_text={player_result_text}
-                    setPlayer_result_text={setPlayer_result_text}
-                    bot_result_text={bot_result_text}
-                    setBot_result_text={setBot_result_text}
-                />
-            
-            </div>
-            <RoundSelector
-                rounds={rounds}
-                setRounds={setRounds}
-                rounds_selector={rounds_selector}
-                setRounds_selector={setRounds_selector}
-                play_page={play_page}
-                setPlay_page={setPlay_page}
-                selected_round_number={selected_round_number.toString()}
-                setSelected_round_number={(val) => setSelected_round_number(Number(val))}
-            />
-            <RevealScore
-                bot_choice={bot_choice}
-                player_choice={player_choice}
-                bot_value={bot_value}
-                player_value={player_value}
-                rounds_played={rounds_played}
-                selected_round_number={selected_round_number}
-                game_over={game_over}
-                setGame_over={setGame_over}
-                setPlay_page={setPlay_page}
-                setBot_choice={setBot_choice}
-                setPlayer_choice={setPlayer_choice}
-                setBot_value={setBot_value}
-                setPlayer_value={setPlayer_value}
-                setRounds_played={setRounds_played}
-                setSelected_round_number={setSelected_round_number}
-                setRounds_selector={setRounds_selector}
-                setRounds={setRounds}
-                draw_score={draw_score}
-                setDraw_score={setDraw_score}
-                player_result={player_result}
-                setPlayer_result={setPlayer_result} 
-                bot_result={bot_result}
-                setBot_result={setBot_result}
-                player_result_text={player_result_text}
-                setPlayer_result_text={setPlayer_result_text}
-                bot_result_text={bot_result_text}
-                setBot_result_text={setBot_result_text}
-            />
-            
-        </div>
-    )
-
+import { outcomeOf, type Choice } from '../lib/rps';
+const choices = [ { label: 'Rock', emoji: '✊', icon: HandMetal }, { label: 'Paper', emoji: '✋', icon: Hand }, { label: 'Scissors', emoji: '✌️', icon: Scissors } ];
+export default function RPS() {
+  const [roundLimit, setRoundLimit] = useState(5);
+  const [phase, setPhase] = useState<'setup'|'playing'|'done'>('setup');
+  const [played, setPlayed] = useState(0); const [wins, setWins] = useState(0); const [losses, setLosses] = useState(0); const [draws, setDraws] = useState(0);
+  const [last, setLast] = useState<{ player: Choice; bot: Choice; outcome: string } | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const { saveScore, resetScore, saveState } = useScore('rock-paper-scissors');
+  useEffect(() => { if (phase !== 'playing') return; const id = window.setInterval(() => setElapsed(t => t + 1), 1000); return () => clearInterval(id); }, [phase]);
+  const start = () => { resetScore(); setPhase('playing'); setPlayed(0); setWins(0); setLosses(0); setDraws(0); setLast(null); setElapsed(0); };
+  const choose = (player: Choice) => {
+    if (phase !== 'playing') return;
+    const bot = Math.floor(Math.random() * 3) as Choice;
+    const result = outcomeOf(player, bot);
+    const nw = wins + Number(result === 'win'), nl = losses + Number(result === 'loss'), nd = draws + Number(result === 'draw');
+    const total = played + 1;
+    setLast({ player, bot, outcome: result }); setWins(nw); setLosses(nl); setDraws(nd); setPlayed(total);
+    if (total >= roundLimit) { setPhase('done'); void saveScore(nw * 150 + nd * 50, elapsed, nw > nl ? 'win' : nl > nw ? 'loss' : 'draw'); }
+  };
+  const score = wins * 150 + draws * 50;
+  return <GameFrame title="Rock, paper, scissors." kicker="QUICK PLAY / CLASSIC" elapsed={phase === 'setup' ? undefined : elapsed} instructions="A timeless showdown. Choose your move and see if you can beat the bot." onRestart={phase !== 'setup' ? start : undefined} status={saveState || 'Beat the bot over a best-of series. Each win earns 150 points.'}>
+    {phase === 'setup' ? <div className="game-setup"><div className="setup-icon orange"><Hand size={40}/></div><h2>Ready to throw down?</h2><p>How many rounds should we play?</p><div className="choice-pills">{[3,5,7].map(n => <button className={roundLimit === n ? 'selected' : ''} key={n} onClick={() => setRoundLimit(n)}>{n} rounds</button>)}</div><button className="button button-primary button-lg" onClick={start}>Start match <Sparkles size={18}/></button></div> : phase === 'done' ? <GameResult title={wins > losses ? 'You win the match!' : wins < losses ? 'The bot wins this one!' : "It's a draw!"} description={`${wins} wins · ${losses} losses · ${draws} draws`} score={score} onRestart={start}/> : <div className="rps-stage">
+      <div className="round-tracker"><span>ROUND {played + 1} OF {roundLimit}</span><div className="round-progress"><div style={{ width: `${played / roundLimit * 100}%` }}/></div></div>
+      <div className="rps-scoreboard"><div><span>YOU</span><strong>{wins}</strong></div><span className="rps-versus">VS</span><div><span>BOT</span><strong>{losses}</strong></div></div>
+      {last ? <div className="rps-reveal"><span>{choices[last.player].emoji}</span><div><small>LAST ROUND</small><strong>{last.outcome === 'win' ? 'Nice move! You won.' : last.outcome === 'loss' ? 'The bot got you!' : 'A perfect tie.'}</strong></div><span>{choices[last.bot].emoji}</span></div> : <div className="rps-hint">Make your first move below!</div>}
+      <h3>Choose your move</h3><div className="rps-choices">{choices.map((choice, i) => <button onClick={() => choose(i as Choice)} key={choice.label} aria-label={`Choose ${choice.label}`} className="rps-choice"><span>{choice.emoji}</span><b>{choice.label}</b></button>)}</div><div className="rps-small"><Trophy size={15}/> {draws} draws so far</div>
+    </div>}
+  </GameFrame>;
 }
-
-export default RPS;

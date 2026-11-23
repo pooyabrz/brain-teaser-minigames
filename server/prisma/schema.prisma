@@ -1,12 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -15,32 +8,41 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique
-  password   String?
-  name       String?
-  provider   String?
-  providerId String?
-  createdAt  DateTime @default(now())
-  records    Record[]
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  password      String
+  name          String
+  role          String   @default("PLAYER")
+  createdAt     DateTime @default(now())
+  records       Record[]
+  favoriteGames Game[]   @relation("Favorites")
 }
 
 model Game {
-  id        Int      @id @default(autoincrement())
-  slug      String   @unique
-  title     String
-  meta      Json?
-  createdAt DateTime @default(now())
-  records   Record[]
+  id           Int      @id @default(autoincrement())
+  slug         String   @unique
+  title        String
+  description  String
+  category     String   @default("Logic")
+  difficulty   String   @default("Medium")
+  icon         String   @default("puzzle")
+  accent       String   @default("purple")
+  isPublished  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  records      Record[]
+  favoredBy    User[]   @relation("Favorites")
 }
 
 model Record {
   id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
-  game      Game     @relation(fields: [gameId], references: [id])
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
   gameId    Int
   score     Int
-  meta      Json?
+  elapsed   Int      @default(0)
+  outcome   String   @default("completed")
   createdAt DateTime @default(now())
+  @@index([gameId, score])
+  @@index([userId, createdAt])
 }

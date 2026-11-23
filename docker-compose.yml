@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: brain
+      POSTGRES_PASSWORD: brain_dev_password
+      POSTGRES_DB: brain_teaser
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brain -d brain_teaser"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - brain_pgdata:/var/lib/postgresql/data
+volumes:
+  brain_pgdata:
