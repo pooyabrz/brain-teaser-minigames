@@ -1,9 +1,5 @@
 import * as React from "react"
-import { useEffect, useState } from 'react';
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Button } from '@/components/ui/button';
-import { cn } from "@/lib/utils"
+import { useEffect } from 'react';
 
 type score_props = {
     bot_choice : number
@@ -24,7 +20,7 @@ type score_props = {
 }
 
 
-const Score:React.FC<score_props>= ({bot_choice ,setBot_choice ,player_choice, setPlayer_choice, bot_value ,setBot_value ,player_value, setPlayer_value, rounds_played ,setRounds_played,selected_round_number,game_over,setGame_over,draw_score,setDraw_score})=>{
+const Score:React.FC<score_props>= ({bot_choice ,setBot_choice ,player_choice, setPlayer_choice, bot_value ,setBot_value ,player_value, setPlayer_value, rounds_played ,setRounds_played,selected_round_number,draw_score,setDraw_score})=>{
 
     
     useEffect(()=>{

@@ -5,7 +5,6 @@ type SudokuBoardProps = {
     initialBoard: (number | null)[][];
     selectedCell: [number, number] | null;
     handleCellClick: (row: number, col: number) => void;
-    isGameActive: () => void;
 };
 
 export const SudokuBoard: React.FC<SudokuBoardProps> = ({
@@ -13,7 +12,6 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({
     initialBoard,
     selectedCell,
     handleCellClick,
-    isGameActive,
 }) => {
     return (
         <div className="grid grid-cols-9 gap-0 border-4 border-black">

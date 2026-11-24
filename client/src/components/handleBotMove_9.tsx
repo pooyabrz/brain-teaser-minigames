@@ -1,6 +1,5 @@
-import React, { useState } from "react";
 import { checkWinner } from '@/utils/checkWinner';
-import { Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 const getBotMoveIndex = (currentBoard: (string | null)[]) => {
   const emptyIndexes = currentBoard.map((cell, idx) => (cell === null ? idx : null)).filter((idx) => idx !== null) as number[];

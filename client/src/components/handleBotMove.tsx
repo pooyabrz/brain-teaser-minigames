@@ -1,12 +1,11 @@
-import React, { useState } from "react";
-import { checkWinner } from '@/utils/checkWinner';
+import type { Dispatch, SetStateAction } from "react";
 
 
 export const handleBotMove = (
     currentBoard: (string | null)[],
-    setBoard: React.Dispatch<React.SetStateAction<(string | null)[]>>,
-    setIsPlayerTurn: React.Dispatch<React.SetStateAction<boolean>>,
-    setWinner: React.Dispatch<React.SetStateAction<string | null>>,
+    setBoard: Dispatch<SetStateAction<(string | null)[]>>,
+    setIsPlayerTurn: Dispatch<SetStateAction<boolean>>,
+    setWinner: Dispatch<SetStateAction<string | null>>,
     checkWinner: (b: (string | null)[]) => string | null
     ) => {
         const emptyIndexes = currentBoard

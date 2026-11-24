@@ -1,10 +1,6 @@
 import * as React from "react"
 import { useEffect, useState } from 'react';
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
 import { Button } from '@/components/ui/button';
-import { cn } from "@/lib/utils"
-import { PlayAgain } from '@/components/Play_again';
 
 
 type revealscore_props = {
@@ -39,14 +35,12 @@ type revealscore_props = {
 }
 
 
-const RevealScore:React.FC<revealscore_props>= ({setSelected_round_number,setRounds_played,setPlayer_value,setBot_value,setPlayer_choice,setBot_choice,bot_choice ,player_choice,bot_value ,player_value,rounds_played ,selected_round_number,game_over,setGame_over,setPlay_page,setRounds_selector,setRounds,draw_score,setDraw_score,player_result,setPlayer_result,bot_result,setBot_result,player_result_text,setPlayer_result_text,bot_result_text,setBot_result_text})=>{
+const RevealScore:React.FC<revealscore_props>= ({setSelected_round_number,setRounds_played,setPlayer_value,setBot_value,setPlayer_choice,setBot_choice,bot_value ,player_value,rounds_played ,selected_round_number,game_over,setGame_over,setPlay_page,setRounds_selector,setRounds,draw_score,setDraw_score,setPlayer_result,setBot_result,setPlayer_result_text,setBot_result_text})=>{
     const [win,setWin]=useState("hidden");
     const [lose,setLose]=useState("hidden");
     const [draw,setDraw]=useState("hidden");
     const [playerwin,setPlayerWin]=useState(0);
-    const [playerlose,setPlayerLose]=useState(0);
     const [botwin,setBotWin]=useState(0);
-    const [botlose,setBotLose]=useState(0);
     
     useEffect(()=>{
         

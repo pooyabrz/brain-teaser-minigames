@@ -5,7 +5,6 @@ type GameControlsProps = {
     handleClearCell: () => void;
     handleReset: () => void;
     handleBackToMenu: () => void;
-    isGameActive: () => void;
 };
 
 export const GameControls: React.FC<GameControlsProps> = ({
@@ -13,8 +12,6 @@ export const GameControls: React.FC<GameControlsProps> = ({
     handleClearCell,
     handleReset,
     handleBackToMenu,
-    isGameActive
-
 }) => {
     return (
         <div className="mt-6 flex flex-col items-center">

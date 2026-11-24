@@ -1,14 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, type Dispatch, type SetStateAction } from 'react';
 
 type TimerProps = {
     time: number;
-    setTime: (time: number) => void;
+    setTime: Dispatch<SetStateAction<number>>;
     isRunning: boolean;
 };
 
 export const Timer: React.FC<TimerProps> = ({ time, setTime, isRunning }) => {
     useEffect(() => {
-        let interval: NodeJS.Timeout | null = null;
+        let interval: ReturnType<typeof setInterval> | null = null;
         
         if (isRunning) {
             interval = setInterval(() => {

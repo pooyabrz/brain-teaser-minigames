@@ -1,13 +1,8 @@
 import * as React from "react"
-import { useEffect, useState } from 'react';
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
 import { Button } from '@/components/ui/button';
-import { cn } from "@/lib/utils"
 import rockIcon from "../components/images/rock.svg";
 import paperIcon from "../components/images/paper.svg";
 import scissorIcon from "../components/images/scissor.svg";
-import { Score } from './Score';
 
 
 type player_props = {

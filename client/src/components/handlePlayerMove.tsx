@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
 import { checkWinner } from '@/utils/checkWinner';
 import { handleBotMove } from '@/components/handleBotMove';
 import { handleBotMove_9 } from '@/components/handleBotMove_9';
-import { Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 export const handlePlayerMove_9 = (index_9: number, index: number,
     isPlayerTurn: (string | null),
@@ -11,7 +10,7 @@ export const handlePlayerMove_9 = (index_9: number, index: number,
     completedSubs: boolean[],
     nextSubBoard:(number | null),
     winner_9: (string | null)[],
-    botMoveTimer: NodeJS.Timeout | null,
+    botMoveTimer: { current: ReturnType<typeof setTimeout> | null },
     setBoard_9: Dispatch<SetStateAction<(string | null)[][]>>,
     setWinner_9: Dispatch<SetStateAction<(string | null)[]>>,
     setCompletedSubs: Dispatch<SetStateAction<boolean[]>>,

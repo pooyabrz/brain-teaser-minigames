@@ -1,9 +1,5 @@
 import * as React from "react"
-import { useEffect, useState } from 'react';
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
 import { Button } from '@/components/ui/button';
-import { cn } from "@/lib/utils"
 type round_props = {
     rounds: number
     setRounds: (i: number)=> void
@@ -17,7 +13,7 @@ type round_props = {
 
 
 
-const RoundSelector:React.FC<round_props>=({rounds , setRounds , rounds_selector , setRounds_selector , play_page , setPlay_page, selected_round_number, setSelected_round_number}) =>{
+const RoundSelector:React.FC<round_props>=({rounds , setRounds , rounds_selector , setRounds_selector , setPlay_page, setSelected_round_number}) =>{
     const handling_inputvalue = (input: React.ChangeEvent<HTMLInputElement>):void =>{
         setRounds(Number(input.target.value));
     }
