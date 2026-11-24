@@ -1,13 +1,15 @@
 import { useState, type FormEvent } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowRight, BrainCircuit, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { DEMO_MODE } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 export default function LoginPage() {
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
-  const [registering, setRegistering] = useState(false);
+  const [registering, setRegistering] = useState(useLocation().pathname === "/register");
   const [name, setName] = useState(''); const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [visible, setVisible] = useState(false); const [error, setError] = useState(''); const [pending, setPending] = useState(false);
+  if (DEMO_MODE) return <section className="shell standard-page"><div className="bw-panel"><h1>Play as a local player</h1><p>This standalone edition does not collect account credentials. Your progress stays in this browser.</p><Link className="button button-primary" to="/games">Explore games <ArrowRight size={18}/></Link></div></section>;
   if (user) return <Navigate to="/dashboard" replace/>;
   const submit = async (e: FormEvent) => { e.preventDefault(); setError(''); setPending(true); try { if (registering) await register(name, email, password); else await login(email, password); navigate('/dashboard', { replace: true }); } catch (ex) { setError(ex instanceof Error ? ex.message : 'Could not sign in'); } finally { setPending(false); } };
   return <section className="auth-page shell"><div className="auth-aside"><div className="auth-aside-content"><div className="hero-kicker"><span className="pulse-dot"/> THE HAPPY PLACE FOR YOUR BRAIN</div><h2>A little play.<br/><em>A lot of potential.</em></h2><p>Save your high scores, keep your favorites close, and become a familiar face on the leaderboard.</p><div className="auth-brain"><BrainCircuit size={190} strokeWidth={1}/><span>✧</span></div></div></div>

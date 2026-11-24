@@ -15,6 +15,7 @@ model User {
   role          String   @default("PLAYER")
   createdAt     DateTime @default(now())
   records       Record[]
+  arcadeSessions ArcadeSession[]
   favoriteGames Game[]   @relation("Favorites")
 }
 
@@ -45,4 +46,21 @@ model Record {
   createdAt DateTime @default(now())
   @@index([gameId, score])
   @@index([userId, createdAt])
+}
+
+// Additive v2 data. Existing users, favorites and casual records are untouched.
+model ArcadeSession {
+  id          String   @id @default(uuid())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug        String
+  seed        String
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  finishedAt  DateTime?
+  score       Int?
+  actions     Json?
+  xp          Int      @default(0)
+  @@index([userId, createdAt])
+  @@index([slug, score])
 }

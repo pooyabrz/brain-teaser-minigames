@@ -1,3 +1,5 @@
+import { v2 } from './v2';
+import { extra } from './games/engines';
 import 'dotenv/config';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import cors from 'cors';
@@ -179,7 +181,7 @@ const gameFields = (body: Record<string, unknown>) => {
 app.post('/api/admin/games', requireAdmin, wrap(async (req, res) => {
   const data = gameFields(req.body);
   if (!data) { error(res, 400, 'Invalid game fields'); return; }
-  const game = await prisma.game.create({ data: { ...data, isPublished: Boolean(req.body.isPublished) } });
+  const game = await prisma.game.create({ data: { ...data, isPublished: Boolean(req.body.isPublished) && ['sudoku','tic-tac-toe','rock-paper-scissors','memory-match','math-sprint',...extra.map(g=>g[0])].includes(data.slug) } });
   res.status(201).json(game);
 }));
 app.patch('/api/admin/games/:id', requireAdmin, wrap(async (req, res) => {
@@ -188,13 +190,13 @@ app.patch('/api/admin/games/:id', requireAdmin, wrap(async (req, res) => {
   if (!game) { error(res, 404, 'Game not found'); return; }
   const data = gameFields(req.body);
   if (!data) { error(res, 400, 'Invalid game fields'); return; }
-  res.json(await prisma.game.update({ where: { id }, data: { ...data, isPublished: Boolean(req.body.isPublished) } }));
+  res.json(await prisma.game.update({ where: { id }, data: { ...data, isPublished: Boolean(req.body.isPublished) && ['sudoku','tic-tac-toe','rock-paper-scissors','memory-match','math-sprint',...extra.map(g=>g[0])].includes(data.slug) } }));
 }));
 app.delete('/api/admin/games/:id', requireAdmin, wrap(async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isSafeInteger(id)) { error(res, 400, 'Invalid game ID'); return; }
-  await prisma.game.delete({ where: { id } });
-  res.json({ message: 'Game deleted' });
+  await prisma.game.update({ where: { id }, data: { isPublished: false } });
+  res.json({ message: 'Game unpublished; historical records preserved' });
 }));
 app.get('/api/admin/users', requireAdmin, wrap(async (_req, res) => {
   const users = await prisma.user.findMany({ orderBy: { createdAt: 'desc' }, select: { id: true, name: true, email: true, role: true, createdAt: true, _count: { select: { records: true } } } });
@@ -207,6 +209,7 @@ app.post('/api/admin/users', requireAdmin, wrap(async (req, res) => {
   const user = await prisma.user.create({ data: { email, name, role: 'ADMIN', password: await argon2.hash(req.body.password) } });
   res.status(201).json({ user: safeUser(user) });
 }));
+app.use('/api/v2', v2(prisma));
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   const e = err as { code?: string; message?: string };
   if (e.code === 'P2002') { error(res, 409, 'This value already exists'); return; }

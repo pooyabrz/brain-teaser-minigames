@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { extra, initialize, applyAction, slide, four, flips, clues } from '../src/games/engines.ts';
+for(const [slug] of extra)test(`${slug}: deterministic initialization and invalid action rejection`,()=>{const a=initialize(slug,'fixture',0);assert.deepEqual(a,initialize(slug,'fixture',0));assert.equal(applyAction(a,'not-an-action',0),a);});
+test('2048 merges each tile once',()=>{const a=slide([2,2,2,2,...Array(12).fill(0)],0);assert.deepEqual(a.board.slice(0,4),[4,4,0,0]);assert.equal(a.points,8);});
+test('connect four local game completes',()=>{let s=initialize('connect-four','seed',0);for(const x of [0,1,0,1,0,1,0])s=applyAction(s,`cell:${x}`,0);assert.equal(s.status,'completed');assert.ok(four(s.board,14,1));});
+test('reversi legal opening',()=>{const s=initialize('reversi','seed',0);const i=s.board.findIndex((_,i)=>flips(s.board,i,1).length);assert.ok(i>=0);const n=applyAction(s,`cell:${i}`,0);assert.equal(n.board.filter(v=>v===1).length,4);assert.equal(n.turn,2);});
+test('nonogram solves by clues',()=>{let s=initialize('nonogram','seed',0);for(let i=0;i<25;i++)if(s.target[i])s=applyAction(s,`cell:${i}`,0);s=applyAction(s,'check',0);assert.equal(s.status,'completed');assert.equal(clues([1,1,0,1]),'2 1');});
+test('maze reachable for 50 seeds',()=>{for(let i=0;i<50;i++){let s=initialize('maze-escape',String(i),0);const seen=new Set([0]),q=[[0,[]]];let path;while(q.length){const [p,steps]=q.shift();if(p===80){path=steps;break;}for(const j of [p-9,p+9,...(p%9?[p-1]:[]),...(p%9<8?[p+1]:[])])if(j>=0&&j<81&&!s.board[j]&&!seen.has(j)){seen.add(j);q.push([j,[...steps,j]]);}}assert.ok(path);for(const j of path)s=applyAction(s,`cell:${j}`,0);assert.equal(s.status,'completed');}});
+test('hanoi 4-disk legal solution and replay',()=>{let s=initialize('tower-of-hanoi','seed',0);const move=(n,a,b,c)=>{if(!n)return;move(n-1,a,c,b);s=applyAction(s,`tower:${a}`,0);s=applyAction(s,`tower:${b}`,0);move(n-1,c,b,a);};move(4,0,2,1);assert.equal(s.status,'completed');let r=initialize(s.slug,s.seed,0);for(const a of s.actions)r=applyAction(r,a,0);assert.deepEqual(r,s);});
+test('reaction early clicks fail',()=>{const s=initialize('reaction-time','seed',0);assert.equal(applyAction(s,'react',100).status,'failed');assert.equal(applyAction(s,'react',s.stamp+200).score,500);});

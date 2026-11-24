@@ -1,3 +1,68 @@
+# Brainwave 2.0 — Neo-Arcade development build
+
+**Play smarter. Think faster. Level up.**
+
+This version extends the original full-stack project with 20 new game modules (25 total), six themes, local practice progression, daily puzzles, achievements, analytics, a command palette, local multiplayer games, and selected server rule-validated sessions. See [implementation status](docs/IMPLEMENTATION_STATUS.md) for completed features and explicit PRD gaps. This is not a production-certified release.
+
+## GitHub Pages — standalone edition
+
+The repository includes `.github/workflows/deploy-pages.yml`. Upload the **contents** of the extracted project folder to your repository root (including `.github`), on branch `main`. In GitHub Settings → Pages → Build and deployment, select **GitHub Actions**. Then run the deployment workflow from the Actions tab or push to `main`.
+
+For the original repository the published URL is `https://pooyabrz.github.io/brain-teaser-minigames/`. The Pages build uses relative assets and hash routing so forks and custom domains do not need a hard-coded base path.
+
+To run the standalone edition locally (Node 22+):
+
+```bash
+cd client
+npm ci
+npm run dev:pages
+```
+
+To build and preview the exact production edition:
+
+```bash
+npm run build:pages
+npm run preview
+```
+
+Open the URL shown by Vite. No Express server, database, environment secrets or registration is required for this edition. Practice results, XP, daily challenges, themes, favorites and personal records are saved in browser localStorage, not synchronized. The static leaderboard is personal only. The production build generates a scope-specific offline cache of its bundled assets; visit once online and allow installation to finish before going offline. External fonts may fall back to local fonts.
+
+The full-stack source remains available using the separate setup below. Online accounts, server-backed rankings and administration require the API. Online multiplayer and other incomplete PRD features are still listed in the implementation status. The Pages workflow runs tests and a production build before publishing; this archive has not itself been deployed.
+
+### Quick start (full-stack)
+
+Requires Node.js 22+, npm and Docker (or PostgreSQL 16).
+
+```bash
+docker compose up -d postgres
+cd server
+cp .env.example .env
+# Edit .env and set a unique SESSION_SECRET and database credentials.
+npm ci
+npm run prisma:generate
+npm run db:push
+npm run seed
+npm run dev
+```
+
+For an existing database, back it up first. The new table is additive; inspect Prisma's proposed changes before applying. Never use `--force-reset` or `--accept-data-loss` to upgrade this project. The standalone additive migration SQL is under `server/prisma/migrations/202611240001_arcade_sessions/`; this is not a complete migration baseline for a fresh database.
+
+In a second terminal:
+
+```bash
+cd client
+npm ci
+npm run dev
+```
+
+Player: http://localhost:5173. API: http://localhost:4000. For the separate admin UI, run `npm ci && npm run dev` in `admin-interface` (port 5174). Set admin credentials in server `.env` before seeding.
+
+Run `npm test` in `client` to execute engine tests without dependencies on Node 22. Run `npm run build` in each application after installing dependencies. Full-stack production deployment requires an API server, PostgreSQL and HTTPS; GitHub Pages alone cannot host the backend.
+
+---
+
+## Original repository documentation (retained for reference)
+
 # Brainwave — Brain Teaser Minigames 🧠
 
 An interactive, full-stack brain-training playground. This completion of the original **Brain Teaser Minigames** repository contains a redesigned player app, five fully playable games, an administrator studio, and a PostgreSQL-backed Express API.

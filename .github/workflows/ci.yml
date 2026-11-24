@@ -1,0 +1,48 @@
+name: Brainwave CI
+on: [push, pull_request]
+jobs:
+  player:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: diff src/games/engines.ts ../server/src/games/engines.ts
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npm run prisma:generate
+      - run: npm run build
+  studio:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin-interface
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: admin-interface/package-lock.json
+      - run: npm ci
+      - run: npm run build
