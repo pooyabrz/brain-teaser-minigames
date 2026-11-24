@@ -6,7 +6,7 @@ This version extends the original full-stack project with 20 new game modules (2
 
 ## GitHub Pages — standalone edition
 
-The repository includes `.github/workflows/deploy-pages.yml`. Upload the **contents** of the extracted project folder to your repository root (including `.github`), on branch `main`. In GitHub Settings → Pages → Build and deployment, select **GitHub Actions**. Then run the deployment workflow from the Actions tab or push to `main`.
+The repository includes `.github/workflows/deploy-pages.yml`. Upload the **contents** of the extracted project folder to your repository root (including `.github`), on branch `main`, then run the deployment workflow from the Actions tab or push to `main`. The workflow enables GitHub Pages with Actions as its source; if repository policy prevents automatic enablement, select **GitHub Actions** under GitHub Settings → Pages → Build and deployment.
 
 For the original repository the published URL is `https://pooyabrz.github.io/brain-teaser-minigames/`. The Pages build uses relative assets and hash routing so forks and custom domains do not need a hard-coded base path.
 
