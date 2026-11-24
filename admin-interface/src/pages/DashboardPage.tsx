@@ -1,4 +1,3 @@
-import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import AddGame from '../components/AddGame';
 import SearchGames from '../components/SearchGames';

@@ -1,5 +1,5 @@
 // src/components/ManageAccount.jsx
-import React, { useState } from 'react';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,12 @@ const ManageAccount = () => {
   });
   const [message, setMessage] = useState('');
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const token = localStorage.getItem('token'); // Assumes the token is stored here after login
     try {
@@ -26,7 +26,10 @@ const ManageAccount = () => {
       setMessage(response.data.message);
       setForm({ currentPassword: '', newPassword: '' });
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Error changing password');
+      const message = axios.isAxiosError<{ message?: string }>(error)
+        ? error.response?.data?.message
+        : undefined;
+      setMessage(message || 'Error changing password');
     }
   };
 

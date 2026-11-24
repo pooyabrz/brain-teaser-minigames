@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -49,9 +49,12 @@ const EditGame = () => {
         }
       } catch (error) {
         console.error('Error fetching game:', error);
+        const message = axios.isAxiosError<{ message?: string }>(error)
+          ? error.response?.data?.message
+          : undefined;
         toast.error('Failed to load game data', { 
           id: toastId,
-          description: error.response?.data?.message || 'Please try again later'
+          description: message || 'Please try again later'
         });
       } finally {
         setIsLoading(false);
@@ -111,9 +114,12 @@ const EditGame = () => {
       }
     } catch (error) {
       console.error('Error updating game:', error);
+      const message = axios.isAxiosError<{ message?: string }>(error)
+        ? error.response?.data?.message
+        : undefined;
       toast.error('Failed to update game', { 
         id: toastId,
-        description: error.response?.data?.message || 'Please check your input and try again'
+        description: message || 'Please check your input and try again'
       });
     } finally {
       setIsSubmitting(false);

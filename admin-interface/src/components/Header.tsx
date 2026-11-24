@@ -7,11 +7,11 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { User, LogOut, Settings } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
 const Header = () => {
-  const { logout, isLoggedIn, user } = useAuth();
+  const { logout, isLoggedIn } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-gray-900 border-gray-800">
@@ -43,9 +43,8 @@ const Header = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-gray-800">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatar} alt={user?.name} />
                   <AvatarFallback className="bg-gray-700 text-gray-300">
-                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    A
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -53,15 +52,14 @@ const Header = () => {
             <DropdownMenuContent className="w-56 bg-gray-900 border-gray-800 text-white" align="end" forceMount>
               <div className="flex items-center gap-2 p-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatar} alt={user?.name} />
                   <AvatarFallback className="bg-gray-700 text-gray-300">
-                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    A
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <p className="text-sm font-medium text-white">{user?.name || 'Admin'}</p>
+                  <p className="text-sm font-medium text-white">Admin</p>
                   <p className="text-xs text-gray-400">
-                    {user?.email || 'admin@example.com'}
+                    Signed in
                   </p>
                 </div>
               </div>
